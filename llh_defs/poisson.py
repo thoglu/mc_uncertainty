@@ -13,13 +13,13 @@ def poisson_infinite_statistics(k, lambd):
  
     return (-lambd+k*numpy.log(lambd)-scipy.special.gammaln(k+1)).sum()
 
-### equal weight formula with equal weights per bin (eq. 13)
+### equal weight formula with equal weights per bin (eq. 2.6)
 ### multi bin expression, one k, one k_mc and one avg_weight item for each bin, all given by an array
 def poisson_equal_weights(k,k_mc,avgweights,prior_factor=0.0):
     
     return (scipy.special.gammaln((k+k_mc+prior_factor)) -scipy.special.gammaln(k+1.0)-scipy.special.gammaln(k_mc+prior_factor) + (k_mc+prior_factor)* numpy.log(1.0/avgweights) - (k_mc+k+prior_factor)*numpy.log(1.0+1.0/avgweights)).sum()
     
-### single-bin expression for general weights, i.e. k is a number and weights is an array (eq. 19)
+### single-bin expression for general weights, i.e. k is a number and weights is an array (eq. 2.20)
 def poisson_general_weights(k, weights, lauricella_calc="exact", nthrows=100000, prior_factor=0.0):
     
     min_weight=min(weights)
@@ -76,7 +76,7 @@ def poisson_general_weights(k, weights, lauricella_calc="exact", nthrows=100000,
     log_res=log_W+log_fac1+log_fac2+log_fac3+lauri
     return log_res
 
-### single-bin expression for general weights, i.e. k is a number and weights is an array (eq. 27)
+### single-bin expression for general weights, i.e. k is a number and weights is an array (eq. 2.20)
 def poisson_general_weights_direct(k, weights):
     
     weight_prefactors=-numpy.log(weights).sum() - numpy.log(1.0+1.0/weights).sum()
@@ -100,7 +100,7 @@ def poisson_general_weights_direct(k, weights):
     
     return weight_prefactors+contour_res
 
-### The next functions involve the series representation of the Poisson expression for general weights (appendix 8.3)
+### The next functions involve the series representation of the Poisson expression for general weights (appendix A.4)
 ### It is a series respresentation that is steered by the *percentage* parameter, which decides when to stop.
 
 ### Compared to the other formulas above, it is a pure multi-bin expression, i.e. 

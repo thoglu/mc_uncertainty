@@ -15,7 +15,7 @@ def multinomial_standard(k, lambd):
 
 
 #1) Easiest case
-## Mnomial extension for equal weighs in ALL bins... simple Dirichlet-Multinomial distribution DM(k;alpha) (eq. 21) 
+## Mnomial extension for equal weighs in ALL bins... simple Dirichlet-Multinomial distribution DM(k;alpha) (eq. 2.14) 
 ## factorial is expressed Gamma(x+1)
 
 def log_DM(k_s, alphas):
@@ -30,7 +30,7 @@ def log_DM(k_s, alphas):
 
 
 #2) Slightly harder case
-## MNomial extension with equal weights per bin, but different weights between bins (eq. 33) -> Integral over multinomial factor with scaled Dirichlet density.
+## MNomial extension with equal weights per bin, but different weights between bins (eq. 3.6) -> Integral over multinomial factor with scaled Dirichlet density.
 ## Approximating the laruicella function F_D(a,b,c,z) for c>a 
 
 def log_multinomial_equal_weights(k_s, k_mcs, weights, nthrows=100000,integral_type="standard_lauricella", prior_factor=0.0):
@@ -76,7 +76,7 @@ def bars_and_stars_iterator(tot_k, num_bins):
         yield [b-a-1 for a, b in zip((-1,)+c, c+(tot_k+num_bins-1,))]
 
 #3) General case
-## MNomial extension with general weights per bin (eq. 35) -> Combinatorial ratio of many Lauricella functions
+## MNomial extension with general weights per bin (eq. 3.7) -> Combinatorial ratio of many Lauricella functions
 ## Calculates all combinations at once, therefore only one calculation is necessary for p(k), and then all other p(k) 
 ## are automatically calculated. Only works for low-dimensional problems because of combinatorial burden.
 ######### CAUTION: this is a generator that returns a function, not a log-probability. Also for too high k_tot this will take too long. ################
@@ -124,7 +124,7 @@ def log_multinomial_general_weights_generator(tot_k, weight_list, nthrows=100000
     return return_fn
 
 ### Now the two ratio constructions
-### 1) Equal weights (eq. 42)
+### 1) Equal weights (eq. 4.7)
 ### k_s - numpy array of observed events per bin
 ### k_mcs numpy array of numbber of mc events per bin
 ### avg_weights - numpy array of avg weight per bin
@@ -145,7 +145,7 @@ def log_multinomial_poisson_ratio_equal_weights(k_s, k_mcs, avg_weights, laurice
     return numerator-denominator
 
 
-### 2) General weights ratio construction (eq. 43)
+### 2) General weights ratio construction (eq. 4.10)
 ### k_s - number of observed events in a bin - numpy array
 ### all_weights - numpy array of all weights in all bins
 ### index_list - a list of numpy arrays with indices indexing the weights from 'all_weights', one index_arraay per bin
