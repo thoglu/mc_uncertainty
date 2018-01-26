@@ -17,8 +17,57 @@ def poisson_infinite_statistics(k, lambd):
 def poisson_equal_weights(k,k_mc,avgweights,prior_factor=0.0):
     
     return (scipy.special.gammaln((k+k_mc+prior_factor)) -scipy.special.gammaln(k+1.0)-scipy.special.gammaln(k_mc+prior_factor) + (k_mc+prior_factor)* numpy.log(1.0/avgweights) - (k_mc+k+prior_factor)*numpy.log(1.0+1.0/avgweights)).sum()
+
+### single-bin expression for general weights, i.e. k is a number and weights is an array (implements eq. 2.22)
+def poisson_general_weights_direct(k, weights, prior=0.0):
     
-### single-bin expression for general weights, i.e. k is a number and weights is an array (eq. 2.20)
+   
+    weight_prefactors=(-(1.0+prior/float(len(weights)))*numpy.log(weights)).sum()
+
+    zs=1.+1./weights
+
+    # find unique values
+    item_counter=dict()
+    for item in set(zs):
+        item_counter[item]=zs.tolist().count(item)
+
+    new_bs=[]
+    new_zs=[]
+
+    for item in item_counter.keys():
+        new_zs.append(item)
+        new_bs.append(float(item_counter[item]))
+        
+    new_zs_log=numpy.log(new_zs)
+    new_bs=numpy.array(new_bs)
+    new_bs+=prior*new_bs/float(len(weights))
+    
+    res=(-new_bs*new_zs_log).sum()
+    
+    cs=[res]
+    if(k>0):
+        
+        lambdas=[]
+        
+        
+        new_bs_log=numpy.log(new_bs)
+        running_lambda_vec=new_bs_log
+        
+        for cur_ind in range(k):
+            running_lambda_vec-=new_zs_log
+            lambdas.append(scipy.misc.logsumexp(running_lambda_vec).sum())
+            
+            new_cs=scipy.misc.logsumexp( numpy.array(lambdas[::-1])+numpy.array(cs))-numpy.log(cur_ind+1)
+            cs.append(new_cs)
+       
+    return weight_prefactors+cs[-1]
+
+
+##### the following formulas are only suited as a crosscheck
+
+#################################################################################################
+## NOT SUGGESTED TO USE THIS ONE ! DEPRECATED!!! use poisson_general_weights_direct() instead!!!!
+#################################################################################################
 def poisson_general_weights(k, weights, lauricella_calc="exact", nthrows=100000, prior_factor=0.0):
     
     min_weight=min(weights)
@@ -74,50 +123,6 @@ def poisson_general_weights(k, weights, lauricella_calc="exact", nthrows=100000,
 
     log_res=log_W+log_fac1+log_fac2+log_fac3+lauri
     return log_res
-
-### single-bin expression for general weights, i.e. k is a number and weights is an array (eq. 2.20)
-def poisson_general_weights_direct(k, weights, prior=0.0):
-    
-   
-    weight_prefactors=(-(1.0+prior/float(len(weights)))*numpy.log(weights)).sum()
-
-    zs=1.+1./weights
-
-    # find unique values
-    item_counter=dict()
-    for item in set(zs):
-        item_counter[item]=zs.tolist().count(item)
-
-    new_bs=[]
-    new_zs=[]
-
-    for item in item_counter.keys():
-        new_zs.append(item)
-        new_bs.append(float(item_counter[item]))
-        
-    new_zs_log=numpy.log(new_zs)
-    new_bs=numpy.array(new_bs)
-    new_bs+=prior*new_bs/float(len(weights))
-    
-    res=(-new_bs*new_zs_log).sum()
-    
-    cs=[res]
-    if(k>0):
-        
-        lambdas=[]
-        
-        
-        new_bs_log=numpy.log(new_bs)
-        running_lambda_vec=new_bs_log
-        
-        for cur_ind in range(k):
-            running_lambda_vec-=new_zs_log
-            lambdas.append(scipy.misc.logsumexp(running_lambda_vec).sum())
-            
-            new_cs=scipy.misc.logsumexp( numpy.array(lambdas[::-1])+numpy.array(cs))-numpy.log(cur_ind+1)
-            cs.append(new_cs)
-       
-    return weight_prefactors+cs[-1]
 
 ### The next functions involve the series representation of the Poisson expression for general weights (appendix A.4)
 ### It is a series respresentation that is steered by the *percentage* parameter, which decides when to stop.
