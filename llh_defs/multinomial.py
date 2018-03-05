@@ -156,10 +156,10 @@ def log_multinomial_poisson_ratio_general_weights(k_s, all_weights, index_list, 
 
     for ind in range(len(k_s)):
        
-        numerator+=poisson.poisson_general_weights(k_s[ind], all_weights[index_list[ind]], lauricella_calc=lauricella_calc)
+        numerator+=poisson.poisson_general_weights_direct(k_s[ind], all_weights[index_list[ind]])
     
 
-    denominator=poisson.poisson_general_weights(sum(k_s), all_weights, lauricella_calc=lauricella_calc)
+    denominator=poisson.poisson_general_weights_direct(sum(k_s), all_weights)
     
     return numerator-denominator
 

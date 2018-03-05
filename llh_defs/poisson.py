@@ -17,7 +17,7 @@ def poisson_infinite_statistics(k, lambd):
 def poisson_equal_weights(k,k_mc,avgweights,prior_factor=0.0):
     
     return (scipy.special.gammaln((k+k_mc+prior_factor)) -scipy.special.gammaln(k+1.0)-scipy.special.gammaln(k_mc+prior_factor) + (k_mc+prior_factor)* numpy.log(1.0/avgweights) - (k_mc+k+prior_factor)*numpy.log(1.0+1.0/avgweights)).sum()
-    
+
 ### single-bin expression for general weights, i.e. k is a number and weights is an array (eq. 35)
 def poisson_general_weights(k, weights, prior=0.0):
     
@@ -54,7 +54,8 @@ def poisson_general_weights(k, weights, prior=0.0):
 
 ### calculation based on approximate lauricella function or residue at every point... not really needed other than for crosschecks
 def poisson_general_weights_outdated(k, weights, lauricella_calc="exact", nthrows=100000, prior_factor=0.0):
-    
+
+
     min_weight=min(weights)
     sort_mask=numpy.argsort(weights)
     sorted_weights=weights[sort_mask]
@@ -108,9 +109,6 @@ def poisson_general_weights_outdated(k, weights, lauricella_calc="exact", nthrow
 
     log_res=log_W+log_fac1+log_fac2+log_fac3+lauri
     return log_res
-
-
-
 
 
 ### The next functions involve the series representation of the Poisson expression for general weights (appendix A.4)
