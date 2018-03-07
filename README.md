@@ -18,7 +18,7 @@ with the iterative definition
 
 ![Formula gif not found](https://github.com/thoglu/mc_uncertainty/raw/master/img/iterative_sum_expl.gif)
 
-It is implemented by `poisson_general_weights_direct(k, weights)` in `poisson.py`.
+It is implemented by `poisson_general_weights(k, weights)` in `poisson.py`.
 If some weights are equal, they can be combined in the formula (see eq. 35 in https://arxiv.org/abs/1712.01293). The above formula uses the "unique" prior, while. eq. 35 shows the general form with different possible prior assumptions. If all weights are equal, there
 is a simpler expression that circumvents the sums (see eq. 21).
 
