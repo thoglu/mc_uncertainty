@@ -1,24 +1,27 @@
-# mc_uncertainty
+﻿# mc_uncertainty
 
 
-Probabilistic treatment of the uncertainty from the finite size of weighted Monte Carlo data
+This repository implements functions from https://arxiv.org/abs/1712.01293 (**Probabilistic treatment of the uncertainty from the finite size of weighted Monte Carlo data**) and a follow-up paper https://arxiv.org/abs/1902.08831 (**A unified perspective on modified Poisson likelihoods for limited Monte Carlo data**).
+
+Context:
+Limited Monte Carlo data includes a statistical uncertainty which can be taken into account by switching (generalizing) the Poisson distribution with generalized Poisson-gamma mixture (generalized negative binomial) probability distributions. 
+
+This leads to widening of related likelihood scans, as shown in the gif below (red - standard Poisson / green - generalized Poisson-gamma mixture)
 
 <img src="https://github.com/thoglu/mc_uncertainty/raw/master/img/2sec_small.gif" width="640">
 
-This repository implements a collection of functions defined in https://arxiv.org/abs/1712.01293, in particular the functions
-shown in the summary table. The alternative method based on nuisance parameter minimization from https://arxiv.org/abs/1304.0735 is also included. Jupyter notebooks for the Poisson-like and multinomial-like likelihoods demonstrate the usage. The scripts also include some functions which implement different ways to calculate the fourth Lauricella function FD in certain parameter regimes.
+The generalized distributions are integrals over approximations of the Compound Poisson distribution - the distribution of the sum of weights - and can be solved analytically. All major approaches in the literature, including Frequentist solutions like the Barlow/Beeston  (1993) or Chirkin (2012) Ansatz, or previous probabilistic approaches by Argüelles et al (2019) can be shown to be doing the same thing under the hood (1902.08831). Implementations of these methods are included in this repository as well.
 
-**Most important use case:**
+The unified viewpoint also suggests how to incorporate extra prior information into the likelihood. In situations where the background simulation is limited, this can be crucial, as can be seen in the following coverage plots
 
-Simple replacement of the Poisson PDF/likelihood to check for the influence of too little MC simulation (the `w's` are the weights from individual MC events, while `k` is the observed data count):
+<img src="https://github.com/thoglu/mc_uncertainty/raw/master/img/output_small2.gif" width="640">
 
-![Formula gif not found](https://github.com/thoglu/mc_uncertainty/raw/master/img/finite_poisson.gif)
+Three generalized probability distributions are discussed, generalization (2) is seen to perform best in such coverage tests in comparison to all other methods.
 
-with the iterative definition
+Some examples are collected in the Jupyter notebooks. The formulas are partially implemented in c to speed up calculation but can be called via cython. The scripts also include some functions which implement different ways to calculate the fourth Lauricella function FD or the Carlson-R function.
 
-![Formula gif not found](https://github.com/thoglu/mc_uncertainty/raw/master/img/iterative_sum_expl.gif)
+Installation (cython): python setup.py build_ext --inplace
 
-It is implemented by `poisson_general_weights(k, weights)` in `poisson.py`.
-If some weights are equal, they can be combined in the formula (see eq. 35 in https://arxiv.org/abs/1712.01293). The above formula uses the "unique" prior, while. eq. 35 shows the general form with different possible prior assumptions. If all weights are equal, there
-is a simpler expression that circumvents the sums (see eq. 21).
+Questions: thorsten.gluesenkamp@fau.de
+
 
