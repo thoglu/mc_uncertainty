@@ -415,14 +415,15 @@ def poisson_gen3(k, individual_weights_dict, mean_adjustments, log_stirlings,s_f
 ############################
 
 ############################################
-### generic preprocessing to include prior information and empty bins as described in the paper
+### generic preprocessing to include prior information and empty bins as described 
+### in paper (1) https://arxiv.org/abs/1712.01293 and  paper (2) https://arxiv.org/abs/1902.08831
 ############################################
 
 def generic_pdf(k_list, dataset_weights, type="basic_pg", empty_bin_strategy=0, empty_bin_weight="max", mean_adjustment=False, s_factor=1.0, larger_weight_variance=False, log_stirling=None):
     """
     k_list - a numpy array of counts for each bin
     dataset_weights_list - a dictionary of lists of numpy arrays. Each list corresponds to a dataset and contains numpy arrays with weights for a given bin. empty bins here mean an empty array
-    type - old/gen1/gen2/gen2_effective/gen3 - handles the various formulas from the two papers
+    type - basic_pg/gen1/gen2/gen2_effective/gen3 - handles the various formulas from the two papers - (basic_pg (paper 1), all others (paper 2))
     empty_bin_strategy - 0 (no filling), 1 (fill up bins which have at least one event), 2 (fill up all bins)
     empty_bin_weight - what weight to use for pseudo counts in empty  bins? "max" , maximum of all weights of dataset (used in paper) .. could be mean etc
     mead_adjustment - apply mean adjustment as implemented in the paper? yes/no
