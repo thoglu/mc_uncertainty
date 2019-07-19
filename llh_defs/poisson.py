@@ -182,6 +182,10 @@ def bars_and_stars_iterator(tot_k, num_bins):
     for c in itertools.combinations(range(tot_k+num_bins-1), num_bins-1):
         yield [b-a-1 for a, b in zip((-1,)+c, c+(tot_k+num_bins-1,))]
 
+### calculate single poisson gamma mixture in calc_pg vectorized over alpha/beta
+def calc_pg(k, alpha, beta):
+    return (scipy.special.gammaln(k+alpha) -scipy.special.gammaln(k+1.0)-scipy.special.gammaln(alpha) + (alpha)* numpy.log(beta) - (alpha+k)*numpy.log(1.0+beta))
+
 
 ## second way to calculate generalized pg mixture, based on iterative sum
 def generalized_pg_mixture_2nd(k, alphas, betas):
