@@ -85,7 +85,7 @@ def fast_pg_single_bin(k, weights, mean_adjustment=0.0):
     if(ret>1e-300 and len(weights)>0):
         return numpy.log(ret)
     else:
-        
+        prinnt("calling log")
         return pg_log_python(k,weights, alpha_individual=mean_adjustment)
 
 ################## end standard Poisson mixture ####################
@@ -136,7 +136,7 @@ def pgpg_log_python(k, weights, mean_adjustment):
             sum1,sign1=scipy.special.logsumexp(log_first_fac+running_factor_vec_first, b=signs_first,return_sign=True)
             sum2,sign2=scipy.special.logsumexp(log_second_fac+running_factor_vec_second, b=signs_second,return_sign=True)
             
-            res=scipy.special.logsumexp([sum1, sum2], b=[sign1,sign2, 1.0])
+            res=scipy.special.logsumexp([sum1, sum2], b=[sign1,sign2])
             
             log_inner_factors.append(res)
             new_delta=scipy.special.logsumexp( numpy.array(log_inner_factors[::-1])+numpy.array(log_deltas))-numpy.log(i)
@@ -425,7 +425,7 @@ def generic_pdf(k_list, dataset_weights, type="gen2", empty_bin_strategy=1, empt
     k_list - a numpy array of counts for each bin
     dataset_weights_list - a dictionary of lists of numpy arrays. Each list corresponds to a dataset and contains numpy arrays with weights for a given bin. empty bins here mean an empty array
     type - basic_pg/gen1/gen2/gen2_effective/gen3 - handles the various formulas from the two papers - (basic_pg (paper 1), all others (paper 2))
-    empty_bin_strategy - 0 (no filling), 1 (fill up bins which have at least one event), 2 (fill up all bins)
+    empty_bin_strategy - 0 (no filling), 1 (fill up bins which have at least one event from other sources), 2 (fill up all bins)
     empty_bin_weight - what weight to use for pseudo counts in empty  bins? "max" , maximum of all weights of dataset (used in paper) .. could be mean etc
     mead_adjustment - apply mean adjustment as implemented in the paper? yes/no
     weight_moments - change to more "unbiased" way of determining weight distribution moments as implemented in the paper
@@ -437,7 +437,7 @@ def generic_pdf(k_list, dataset_weights, type="gen2", empty_bin_strategy=1, empt
     kmc_dict=dict()
     max_weights=dict()
     for dsname in dataset_weights.keys():
-        mw=max([max(w) if len(w)>0 else 0 for w in dataset_weights[dsname]])
+        mw=max([max(w) if len(w)>0 else 1.0 for w in dataset_weights[dsname]])
         kmc_dict[dsname]=numpy.array([len(w) for w in dataset_weights[dsname]])
         max_weights[dsname]=mw
 
@@ -465,12 +465,15 @@ def generic_pdf(k_list, dataset_weights, type="gen2", empty_bin_strategy=1, empt
             for dsname in kmc_dict.keys():
                 if(kmc_dict[dsname][bin_index] > 0):
                     weight_found=True
+                    
 
             if(weight_found):
 
                 for dsname in kmc_dict.keys():
                     if(kmc_dict[dsname][bin_index]==0):
+                        
                         new_weights[dsname][bin_index]=numpy.array([max_weights[dsname]])
+                        
 
     # strategy 2 - fill up all bins
     elif(empty_bin_strategy==2):
