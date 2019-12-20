@@ -1,8 +1,9 @@
-from autograd import numpy as numpy
+#from autograd import numpy as numpy
+import numpy
 import scipy
-import lauricella_fd
-import llh_fast
-import poisson_gamma_mixtures
+from . import lauricella_fd
+from . import llh_fast
+from . import poisson_gamma_mixtures
 import copy
 
 
@@ -59,10 +60,10 @@ def pg_log_python(k, weights, alpha_individual=0.0, extra_prior_counter=0.0, ext
             
             # summing assuming all summands positive .. which is the only well-defined region here
             
-            res=scipy.misc.logsumexp(log_first_fac+running_factor_vec)
+            res=scipy.special.logsumexp(log_first_fac+running_factor_vec)
             
             log_inner_factors.append(res)
-            new_delta=scipy.misc.logsumexp( numpy.array(log_inner_factors[::-1])+numpy.array(log_deltas))-numpy.log(i)
+            new_delta=scipy.special.logsumexp( numpy.array(log_inner_factors[::-1])+numpy.array(log_deltas))-numpy.log(i)
             log_deltas.append(new_delta)
  
             #log_inner_factors.append((first_fac*(first_var**i)-second_fac*(second_var**i)).sum())
@@ -71,21 +72,21 @@ def pg_log_python(k, weights, alpha_individual=0.0, extra_prior_counter=0.0, ext
     return log_deltas[-1]+log_weight_prefactors
 
 ## fast methods that employ c implementations and only fall back to log-python from above when certain accuracy is required 
-def fast_pg_single_bin(k, weights, mean_adjustment_per_weight):
+def fast_pg_single_bin(k, weights, mean_adjustment=0.0):
     
     # alphas array corresponds to alpha/N in paper
     ## gamma poisson mixture based on gamma-poisson priors - general
 
 
     betas=1.0/weights
-    alphas=numpy.ones(len(weights), dtype=float)+mean_adjustment_per_weight
+    alphas=numpy.ones(len(weights), dtype=float)+mean_adjustment
     ret=poisson_gamma_mixtures.c_generalized_pg_mixture(k, alphas, betas)
 
     if(ret>1e-300 and len(weights)>0):
         return numpy.log(ret)
     else:
         
-        return pg_log_python(k,weights, alpha_individual=mean_adjustment_per_weight)
+        return pg_log_python(k,weights, alpha_individual=mean_adjustment)
 
 ################## end standard Poisson mixture ####################
 ####################################################################
@@ -132,13 +133,13 @@ def pgpg_log_python(k, weights, mean_adjustment):
             running_factor_vec_first+=log_first_var
             running_factor_vec_second+=log_second_var
             
-            sum1,sign1=scipy.misc.logsumexp(log_first_fac+running_factor_vec_first, b=signs_first,return_sign=True)
-            sum2,sign2=scipy.misc.logsumexp(log_second_fac+running_factor_vec_second, b=signs_second,return_sign=True)
+            sum1,sign1=scipy.special.logsumexp(log_first_fac+running_factor_vec_first, b=signs_first,return_sign=True)
+            sum2,sign2=scipy.special.logsumexp(log_second_fac+running_factor_vec_second, b=signs_second,return_sign=True)
             
-            res=scipy.misc.logsumexp([sum1, sum2], b=[sign1,sign2, 1.0])
+            res=scipy.special.logsumexp([sum1, sum2], b=[sign1,sign2, 1.0])
             
             log_inner_factors.append(res)
-            new_delta=scipy.misc.logsumexp( numpy.array(log_inner_factors[::-1])+numpy.array(log_deltas))-numpy.log(i)
+            new_delta=scipy.special.logsumexp( numpy.array(log_inner_factors[::-1])+numpy.array(log_deltas))-numpy.log(i)
             log_deltas.append(new_delta)
  
             #log_inner_factors.append((first_fac*(first_var**i)-second_fac*(second_var**i)).sum())
@@ -147,7 +148,7 @@ def pgpg_log_python(k, weights, mean_adjustment):
     
     return log_deltas[-1]+log_weight_prefactors
 
-def fast_pgpg_single_bin(k, weights, mean_adjustment):
+def fast_pgpg_single_bin(k, weights, mean_adjustment=0):
     
     ## fast calculation in c without logarithm .. if return value is too small, go to 
     ## more time consuming calculation in log space in python
@@ -197,7 +198,7 @@ def generalized_pg_mixture_2nd(k, alphas, betas):
         
         log_res.append(calc_pg(it, alphas, betas).sum())
     
-    return scipy.misc.logsumexp(log_res)
+    return scipy.special.logsumexp(log_res)
 
 
 ## calculate c-based version .. if it doesnt suffice in precision, go to direct convolution
@@ -213,7 +214,7 @@ def poisson_gen2(data, individual_weights_dict, mean_adjustments, larger_weight_
 
     tot_llh=0.0
 
-    for cur_bin_index, _ in enumerate(individual_weights_dict.values()[0]):
+    for cur_bin_index, _ in enumerate(list(individual_weights_dict.values())[0]):
 
         alphas=[]
         betas=[]
@@ -227,7 +228,7 @@ def poisson_gen2(data, individual_weights_dict, mean_adjustments, larger_weight_
                 mu=float(len(this_weights))
                 
                 exp_w=0.0
-                #print "ind .. ", cur_bin_index, " ", src
+                
                 
                 exp_w=numpy.mean(this_weights)
                 var_w=0.0
@@ -273,7 +274,7 @@ def poisson_gen2_effective(data, individual_weights_dict, mean_adjustments):
 
     tot_llh=0.0
 
-    for cur_bin_index, _ in enumerate(individual_weights_dict.values()[0]):
+    for cur_bin_index, _ in enumerate(list(individual_weights_dict.values())[0]):
 
         mus=[]
         all_weights=[]
@@ -339,7 +340,7 @@ def generate_log_stirling(max_val=1000):
                 arr[i][j]=0.0
                 continue
           
-            arr[i][j]=scipy.misc.logsumexp([numpy.log(i-1.0)+arr[i-1][j],arr[i-1][j-1]])
+            arr[i][j]=scipy.special.logsumexp([numpy.log(i-1.0)+arr[i-1][j],arr[i-1][j-1]])
     
     return arr
 
@@ -349,7 +350,7 @@ def poisson_gen3(k, individual_weights_dict, mean_adjustments, log_stirlings,s_f
 
     num_sources=len(individual_weights_dict.keys())
 
-    for cur_bin_index, _ in enumerate(individual_weights_dict.values()[0]):
+    for cur_bin_index, _ in enumerate(list(individual_weights_dict.values())[0]):
 
         As=[]
         Bs=[]
@@ -419,7 +420,7 @@ def poisson_gen3(k, individual_weights_dict, mean_adjustments, log_stirlings,s_f
 ### in paper (1) https://arxiv.org/abs/1712.01293 and  paper (2) https://arxiv.org/abs/1902.08831
 ############################################
 
-def generic_pdf(k_list, dataset_weights, type="basic_pg", empty_bin_strategy=0, empty_bin_weight="max", mean_adjustment=False, s_factor=1.0, larger_weight_variance=False, log_stirling=None):
+def generic_pdf(k_list, dataset_weights, type="gen2", empty_bin_strategy=1, empty_bin_weight="max", mean_adjustment=True, s_factor=1.0, larger_weight_variance=False, log_stirling=None):
     """
     k_list - a numpy array of counts for each bin
     dataset_weights_list - a dictionary of lists of numpy arrays. Each list corresponds to a dataset and contains numpy arrays with weights for a given bin. empty bins here mean an empty array
@@ -428,6 +429,8 @@ def generic_pdf(k_list, dataset_weights, type="basic_pg", empty_bin_strategy=0, 
     empty_bin_weight - what weight to use for pseudo counts in empty  bins? "max" , maximum of all weights of dataset (used in paper) .. could be mean etc
     mead_adjustment - apply mean adjustment as implemented in the paper? yes/no
     weight_moments - change to more "unbiased" way of determining weight distribution moments as implemented in the paper
+
+    default settings (as stated towards the end of the paper): gen2 , empty_bin_strategy=1, mead_adjustment=True
     """
 
     ## calculate number of mc events / bin / dataset
@@ -516,9 +519,9 @@ def generic_pdf(k_list, dataset_weights, type="basic_pg", empty_bin_strategy=0, 
                 individual_mean_adjustments=numpy.array(individual_mean_adjustments)
 
                 if(type=="basic_pg"):
-                    llh_res+=fast_pg_single_bin(k_list[bin_index], total_weights, individual_mean_adjustments)
+                    llh_res+=fast_pg_single_bin(k_list[bin_index], total_weights, mean_adjustment=individual_mean_adjustments)
                 elif(type=="gen1"):
-                    llh_res+=fast_pgpg_single_bin(k_list[bin_index], total_weights, individual_mean_adjustments)
+                    llh_res+=fast_pgpg_single_bin(k_list[bin_index], total_weights, mean_adjustment=individual_mean_adjustments)
                 
 
 
@@ -581,7 +584,7 @@ def barlow_beeston_llh(data, weights_dict, indices_dict):
 
         ## ind goes over all bins
         
-        for ind in numpy.arange(len(indices_dict.values()[0])):
+        for ind in numpy.arange(len(list(indices_dict.values())[0])):
             these_weights=[]
 
             for src_key in indices_dict.keys():
@@ -640,7 +643,7 @@ def chirkin_llh(data, all_weights, weight_indices):
         lagrange = numpy.array([(scipy.optimize.brentq(func, -0.999999/max(all_weights[w]), 1., args=(all_weights[w],d), full_output=False)\
                     if d else 1.) if (len(w)>0) else 0. for (d, w) in zip(data, weight_indices)])
         # llh with new weights
-        print "dima lagrange ", lagrange
+        
         llh = numpy.array([numpy.sum(numpy.log(1. + lagrange[i]*all_weights[w])) if(len(w)>0) else 0 for (i,w) in enumerate(weight_indices)])\
               + data * numpy.log(1.-(lagrange-(lagrange == 1.)))
         raise NotImplementedError("`data` has more than 1 dimensions.")

@@ -1,10 +1,10 @@
 import numpy
 import scipy
 import scipy.special
-import lauricella_fd
 import itertools
 import time
-import poisson
+from . import lauricella_fd
+from . import poisson
 
 ## 0) The standard approach: assume we have inifnite statistics and calculate standard multinomial probability
 def multinomial_standard(k, lambd):
@@ -114,12 +114,12 @@ def log_multinomial_general_weights_generator(tot_k, weight_list, nthrows=100000
             new_k_tuple+=(sum(numpy.array(bin_dist)[bin_mask==cur_bin_index]),)
             
 
-        if(not probs.has_key(new_k_tuple)):
+        if not new_k_tuple in probs.keys():
             probs[new_k_tuple]=[]
         probs[new_k_tuple].append(denom_log_list[dist_index])
 
     def return_fn(new_k_s):
-        return scipy.misc.logsumexp(probs[tuple(new_k_s)])-scipy.misc.logsumexp(denom_log_list)
+        return scipy.special.logsumexp(probs[tuple(new_k_s)])-scipy.special.logsumexp(denom_log_list)
 
     return return_fn
 
@@ -129,9 +129,11 @@ def log_multinomial_general_weights_generator(tot_k, weight_list, nthrows=100000
 ### k_mcs numpy array of numbber of mc events per bin
 ### avg_weights - numpy array of avg weight per bin
 
+## based on some older formula with sampled lauricella funtions that was very slow 
+"""
 def log_multinomial_poisson_ratio_equal_weights(k_s, k_mcs, avg_weights, lauricella_calc="exact"):
 
-    numerator=poisson.poisson_equal_weights(k_s,k_mcs,avg_weights, prior_factor=0.0)
+    numerator=poisson.pg_equal_weights(k_s,k_mcs,avg_weights, prior_factor=0.0)
 
     index_list=[]
     total_weights=[]
@@ -140,26 +142,26 @@ def log_multinomial_poisson_ratio_equal_weights(k_s, k_mcs, avg_weights, laurice
         index_list.append(numpy.ones(k_mcs[ind])*ind)
 
     total_weights=numpy.array(total_weights)
-    denominator=poisson.poisson_general_weights(sum(k_s), total_weights, lauricella_calc=lauricella_calc)
+    denominator=poisson.fast_pg_single_bin(sum(k_s), total_weights, lauricella_calc=lauricella_calc)
    
     return numerator-denominator
-
+"""
 
 ### 2) General weights ratio construction (eq. 53)
 ### k_s - number of observed events in a bin - numpy array
 ### all_weights - numpy array of all weights in all bins
 ### index_list - a list of numpy arrays with indices indexing the weights from 'all_weights', one index_arraay per bin
 
-def log_multinomial_poisson_ratio_general_weights(k_s, all_weights, index_list, lauricella_calc="exact"):
+def log_multinomial_poisson_ratio_general_weights(k_s, all_weights, index_list):
 
     numerator=0.0
 
     for ind in range(len(k_s)):
        
-        numerator+=poisson.poisson_general_weights_direct(k_s[ind], all_weights[index_list[ind]])
+        numerator+=poisson.fast_pg_single_bin(k_s[ind], all_weights[index_list[ind]])
     
 
-    denominator=poisson.poisson_general_weights_direct(sum(k_s), all_weights)
+    denominator=poisson.fast_pg_single_bin(sum(k_s), all_weights)
     
     return numerator-denominator
 

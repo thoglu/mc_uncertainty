@@ -1,8 +1,9 @@
 import numpy
-import scipy.misc
+import scipy.special
 import scipy
 import itertools
-import llh_fast
+from . import llh_fast
+import sys
 
 # Numerical evaluation of integral representation 1, multi-dimensional integral over simplex
 def log_lauricella_dumb_integral_multi(a, bs, c, zs, nthrows=1000):
@@ -38,10 +39,10 @@ def log_lauricella_dumb_integral_multi(a, bs, c, zs, nthrows=1000):
     
    
     ## the extra integrand part
-    log_integrand_vals2=-a*numpy.log((1.0-numpy.exp( scipy.misc.logsumexp(numpy.log(final_randoms)+numpy.resize(numpy.log(zs), final_randoms.shape), axis=1))) ) 
+    log_integrand_vals2=-a*numpy.log((1.0-numpy.exp( scipy.special.logsumexp(numpy.log(final_randoms)+numpy.resize(numpy.log(zs), final_randoms.shape), axis=1))) ) 
     
     ## the log of the total integrated integrand
-    log_result= scipy.misc.logsumexp(log_integration_volume_per_throw+basic_dirichlet_logintegrand+log_integrand_vals2)
+    log_result= scipy.special.logsumexp(log_integration_volume_per_throw+basic_dirichlet_logintegrand+log_integrand_vals2)
     
     return log_result+log_normalizing_factor
     
@@ -61,7 +62,7 @@ def log_lauricella_dumb_integral_single(a,bs, c, zs, nthrows=1000):
 
     log_normfactor=scipy.special.gammaln(c)-scipy.special.gammaln(a)-scipy.special.gammaln(c-a)
 
-    return scipy.misc.logsumexp(log_normfactor+log_res)
+    return scipy.special.logsumexp(log_normfactor+log_res)
 
 def log_lauricella_from_carlson_r(a,bs,c,zs):
     
@@ -83,7 +84,7 @@ def log_beta(a,b):
 
 def lauricella_2f1_exact(a,b,c,z):
     if(a<2):
-        print "need at leeast 2!!!"
+        sys.exit("a needs to be >=2")
         return None
     log_prefac=log_bin_fac(c-1.0, a-1.0)-(c-1)*numpy.log(z)
     
